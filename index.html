@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Labeler</title>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tiff.js@0.16.1/tiff.min.js"></script>
     <script src="config.js"></script>
     <style>
         * {
@@ -234,7 +235,7 @@
     
     <div class="image-container">
         <div id="imageContent">
-            <p class="loading">Configure your S3 buckets above and click "Load Images" to start</p>
+            <p class="loading">Loading images...</p>
         </div>
     </div>
 
@@ -283,15 +284,21 @@
                 Prefix: CONFIG.SOURCE_PREFIX
             };
             
+            console.log('Loading from bucket:', CONFIG.SOURCE_BUCKET);
+            console.log('Using prefix:', CONFIG.SOURCE_PREFIX);
+            
             try {
                 const data = await s3.listObjectsV2(params).promise();
+                console.log('S3 response:', data);
+                console.log('Total objects found:', data.Contents?.length || 0);
                 
                 images = data.Contents
                     .filter(item => {
                         const key = item.Key.toLowerCase();
                         return key.endsWith('.jpg') || key.endsWith('.jpeg') || 
                                key.endsWith('.png') || key.endsWith('.gif') || 
-                               key.endsWith('.webp');
+                               key.endsWith('.webp') || key.endsWith('.tif') || 
+                               key.endsWith('.tiff');
                     })
                     .map(item => item.Key);
                 
@@ -319,6 +326,7 @@
             }
             
             const imageKey = images[currentIndex];
+            const isTiff = imageKey.toLowerCase().endsWith('.tif') || imageKey.toLowerCase().endsWith('.tiff');
             
             const imageUrl = s3.getSignedUrl('getObject', {
                 Bucket: CONFIG.SOURCE_BUCKET,
@@ -333,7 +341,10 @@
             
             document.getElementById('imageContent').innerHTML = `
                 <div class="image-wrapper">
-                    <img src="${imageUrl}" alt="${imageKey}" class="current-image" />
+                    ${isTiff ? 
+                        `<canvas id="tiffCanvas" class="current-image"></canvas>` : 
+                        `<img src="${imageUrl}" alt="${imageKey}" class="current-image" />`
+                    }
                     <div class="image-info">
                         <div><strong>Image ${currentIndex + 1} of ${images.length}</strong></div>
                         <div>${imageKey}</div>
@@ -371,6 +382,25 @@
                     </div>
                 </div>
             `;
+            
+            // Load TIFF if needed
+            if (isTiff) {
+                loadTiffImage(imageUrl);
+            }
+        }
+        
+        async function loadTiffImage(url) {
+            try {
+                const response = await fetch(url);
+                const buffer = await response.arrayBuffer();
+                const tiff = new Tiff({ buffer });
+                const canvas = document.getElementById('tiffCanvas');
+                tiff.renderToCanvas(canvas);
+            } catch (error) {
+                console.error('Error loading TIFF:', error);
+                document.getElementById('tiffCanvas').outerHTML = 
+                    '<p style="color: red;">Error loading TIFF image</p>';
+            }
         }
 
         function labelImage(label) {
