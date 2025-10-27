@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Labeler</title>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tiff.js@0.16.1/tiff.min.js"></script>
+    <script src="https://unpkg.com/tiff.js@0.16.1/tiff.min.js"></script>
     <script src="config.js"></script>
     <style>
         * {
@@ -391,15 +391,22 @@
         
         async function loadTiffImage(url) {
             try {
-                const response = await fetch(url);
-                const buffer = await response.arrayBuffer();
-                const tiff = new Tiff({ buffer });
-                const canvas = document.getElementById('tiffCanvas');
-                tiff.renderToCanvas(canvas);
+                // Try using TIFF.js if available
+                if (typeof Tiff !== 'undefined') {
+                    const response = await fetch(url);
+                    const buffer = await response.arrayBuffer();
+                    const tiff = new Tiff({ buffer });
+                    const canvas = document.getElementById('tiffCanvas');
+                    tiff.renderToCanvas(canvas);
+                } else {
+                    // Fallback: show download link
+                    document.getElementById('tiffCanvas').outerHTML = 
+                        `<div style="padding: 20px; border: 2px dashed #ccc;"><p>TIFF Preview Not Available</p><a href="${url}" target="_blank" style="color: #007bff;">Click to Download/View TIFF</a></div>`;
+                }
             } catch (error) {
                 console.error('Error loading TIFF:', error);
                 document.getElementById('tiffCanvas').outerHTML = 
-                    '<p style="color: red;">Error loading TIFF image</p>';
+                    `<div style="padding: 20px; border: 2px dashed #ccc;"><p style="color: red;">Error loading TIFF</p><a href="${url}" target="_blank" style="color: #007bff;">Click to Download/View TIFF</a></div>`;
             }
         }
 
