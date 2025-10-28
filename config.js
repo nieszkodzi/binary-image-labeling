@@ -12,7 +12,7 @@ const CONFIG = {
     SOURCE_BUCKET: 'patomorfologia-ai',
     
     // Optional prefix/folder in the source bucket (e.g., 'images/' or leave empty '')
-    SOURCE_PREFIX: 'datasets/Non_melanoma_skin_cancer_segmentation_for_histopathology/Images/',
+    SOURCE_PREFIX: 'datasets/Non_melanoma_skin_cancer_segmentation_for_histopathology/Images_jpgs/',
     
     // Output bucket where CSV files will be saved
     OUTPUT_BUCKET: 'patomorfologia-ai',
