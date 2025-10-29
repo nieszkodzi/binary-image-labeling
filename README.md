@@ -5,12 +5,12 @@ Simple web app for labeling images stored in S3. View images, label as YES/NO, a
 ## Files
 
 ```
-pato-image-checker/
+binary-image-labeling/
 ├── index.html              # Main web application
 ├── config.js               # AWS configuration (your settings)
 ├── convert_tiff_to_jpg.py  # Script to convert TIFF images to JPG
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+├── pyproject.toml          # Python dependencies
+└── README.md               # This file
 ```
 
 ## Quick Setup
